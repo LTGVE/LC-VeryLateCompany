@@ -30,14 +30,14 @@ namespace VeryLateCompany
 			Logger.LogWarning(
                 "\n！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！" +
                 "\nVeryLateCompany v0.1.0 v73 Fixed by LT_GVE" +
-                "\nThis mod is Decompiled  McBowie/VeryLateCompany Mod then fixed and re-built it." +
+                "\nThis mod is Decompiled from  McBowie/VeryLateCompany Mod then fixed and re-built it." +
 				"\n"+
 				"\nJust for fun"+
 				"\nIt maybe has some bugs, but it works fine for me and my friends." +
 				"\nIf you have any problems, please create an issue on GitHub to let me know."+
 				"\nDon't forget upload logs and your mod list,so that I can solve the problem more better."+
 				"\nLink"+
-                "\nhttps://github.com/LTGVE/LC-VeryLateCompany" +
+                "\nhttps://github.com/LTGVE/LC-VeryLateCompany/issues" +
                 "\n！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！");
 		}
 

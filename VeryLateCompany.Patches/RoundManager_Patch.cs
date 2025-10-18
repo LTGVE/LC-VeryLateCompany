@@ -72,6 +72,8 @@ namespace McBowie.VeryLateCompany.VeryLateCompany.Patches
 
             object executeStage = Enum.Parse(__RpcExecStage, "Execute");
             object sendStage = Enum.Parse(__RpcExecStage, "Send");
+            __rpc_exec_stage.SetValue(__instance, executeStage);
+            /*
             NetworkManager networkManager = __instance.NetworkManager;
             if ((object)networkManager == null || !networkManager.IsListening)
             {
@@ -96,13 +98,19 @@ namespace McBowie.VeryLateCompany.VeryLateCompany.Patches
 
                 __endSendClientRpc.Invoke(__instance,new object[] { bufferWriter, 3073943002u, clientRpcParams, RpcDelivery.Reliable });
             }
-            /*
+
+
+
+            #region Main problem code
             if (!__rpc_exec_stage.GetValue(__instance).Equals(executeStage)|| (!networkManager.IsClient && !networkManager.IsHost))
             {
                 Debug.LogWarning($"Cannot generate new level. Not on client or server.rpc exec stage : {__rpc_exec_stage.GetValue(__instance).ToString()}\nis client : {networkManager.IsClient}\nis host : {networkManager.IsHost}");
                 return false;
             }
-            */
+            #endregion
+
+
+
             __rpc_exec_stage.SetValue(__instance, sendStage);
             __instance.outsideAINodes = (from x in GameObject.FindGameObjectsWithTag("OutsideAINode")
                               orderby Vector3.Distance(x.transform.position, StartOfRound.Instance.elevatorTransform.position)
@@ -164,8 +172,9 @@ namespace McBowie.VeryLateCompany.VeryLateCompany.Patches
             else
             {
                 Debug.LogError($"This client could not find dungeon generator! scene count: {SceneManager.sceneCount}");
-            }
-            return false;
+            }*/
+            //return false;
+            return true;
         }
     }
 }
