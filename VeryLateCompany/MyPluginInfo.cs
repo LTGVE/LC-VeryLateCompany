@@ -6,6 +6,6 @@ namespace VeryLateCompany
 
 		public const string PLUGIN_NAME = "VeryLateCompany";
 
-		public const string PLUGIN_VERSION = "0.1.0";
+		public const string PLUGIN_VERSION = "0.1.1";
 	}
 }
