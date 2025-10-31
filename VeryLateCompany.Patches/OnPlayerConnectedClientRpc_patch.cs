@@ -103,7 +103,7 @@ namespace VeryLateCompany.Patches
 		private static void Prefix(StartOfRound __instance, ulong clientId, int connectedPlayers, ulong[] connectedPlayerIdsOrdered, int assignedPlayerObjectId, int serverMoneyAmount, int levelID, int profitQuota, int timeUntilDeadline, int quotaFulfilled, int randomSeed)
 		{
             PreviousLocation = __instance.allPlayerObjects[assignedPlayerObjectId].transform.position;
-			throw new NullReferenceException("TEST");
+			Debug.Log($"Player joined. last location: {PreviousLocation}");
 		}
 
         [HarmonyPostfix]
@@ -213,9 +213,9 @@ namespace VeryLateCompany.Patches
 		private static void GenerateNewFloorPostfix(RoundManager __instance)
 		{
 			wasPresentAtGameStart = UnityEngine.Object.FindObjectOfType<StartMatchLever>().leverHasBeenPulled;
-			/*
-			if (!wasPresentAtGameStart)
-			{
+			if (!wasPresentAtGameStart&&PreviousLocation!= Vector3.zero&&PreviousLocation!=new Vector3(9.33f, 5.20f,1021))
+			{/*
+				Debug.Log((object)($"Previous location: {PreviousLocation}"));
 				IEnumerator corout = TeleportToPreviousLocation(startOfRound.allPlayerScripts[playerObjectID]);
 				if (!isPlayerDead)
 				{
@@ -226,7 +226,8 @@ namespace VeryLateCompany.Patches
 				corout = KillPlayer(startOfRound.allPlayerScripts[playerObjectID]);
 				((MonoBehaviour)startOfRound).StartCoroutine(corout);
 				startOfRound.allPlayerScripts[playerObjectID].DisablePlayerModel(playerObject);
-			}*/
+				*/
+			}
 		}
 	}
 }
