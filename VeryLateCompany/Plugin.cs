@@ -1,11 +1,15 @@
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
+using System;
+using System.Diagnostics;
 using UnityEngine;
 
 namespace VeryLateCompany
 {
-	[BepInPlugin("McBowie.VeryLateCompany", "VeryLateCompany", "0.1.0")]
+    [HarmonyDebug]
+
+    [BepInPlugin("McBowie.VeryLateCompany", "VeryLateCompany", "0.1.0")]
 	internal class Plugin : BaseUnityPlugin
 	{
 		public static bool AllowJoiningWhileLanded = true;
@@ -14,12 +18,14 @@ namespace VeryLateCompany
 
 		public static Plugin Instance { get; private set; } = null;
 
-		internal static ManualLogSource Logger { get; private set; } = null;
+		internal static BepInEx.Logging.ManualLogSource Logger { get; private set; } = null;
 
 		internal static Harmony? Harmony { get; set; }
 
 		private void Awake()
+			
 		{
+			Harmony.DEBUG = true;
 			//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 			//IL_001f: Expected O, but got Unknown
 			Logger = BepInEx.Logging.Logger.CreateLogSource(MetadataHelper.GetMetadata(this).Name);
@@ -29,7 +35,7 @@ namespace VeryLateCompany
 			Logger.LogInfo(" VeryLateCompany v0.1.0 v73 Fixed has loaded! Restorer : LT_GVE");
 			Logger.LogWarning(
                 "\n！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！" +
-                "\nVeryLateCompany v0.1.0 v73 Fixed by LT_GVE" +
+                "\nVeryLateCompany v0.1.4 v73 Fixed by LT_GVE" +
                 "\nThis mod is Decompiled from  McBowie/VeryLateCompany Mod then fixed and re-built it." +
 				"\n"+
 				"\nJust for fun"+
@@ -39,20 +45,37 @@ namespace VeryLateCompany
 				"\nLink"+
                 "\nhttps://github.com/LTGVE/LC-VeryLateCompany/issues" +
                 "\n！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！");
-		}
+        }
 
-		public static void SetLobbyJoinable(bool joinable)
+        public static void SetLobbyJoinable(bool joinable)
 		{
 			LobbyJoinable = joinable;
 			GameNetworkManager.Instance.SetLobbyJoinable(joinable);
-			QuickMenuManager quickMenuManager = Object.FindObjectOfType<QuickMenuManager>();
+			QuickMenuManager quickMenuManager = UnityEngine.Object.FindObjectOfType<QuickMenuManager>();
 			if (quickMenuManager!=null)
 			{
 				quickMenuManager.inviteFriendsTextAlpha.alpha = (joinable ? 1f : 0.2f);
 			}
 		}
 
-		internal static void Unpatch()
+        public static void LogException(Exception e)
+        {
+			Logger.LogError(e);
+			/*
+            var st = new StackTrace(e, true);
+			UnityEngine.Debug.Log("Exception: " + e.Message + "\n" + e.StackTrace);
+            foreach (var frame in st.GetFrames())
+            {
+                string fileName = frame.GetFileName();
+                int line = frame.GetFileLineNumber();
+                int column = frame.GetFileColumnNumber();
+                string methodName = frame.GetMethod().Name;
+				UnityEngine.Debug.LogError($"Exception: {e.Message} at {fileName}. {methodName} {line}:{column}");
+            }*/
+
+        }
+
+        internal static void Unpatch()
 		{
 			Logger.LogDebug((object)"Unpatching...");
 			Harmony? harmony = Harmony;

@@ -4,7 +4,10 @@ using HarmonyLib;
 using McBowie.VeryLateCompany.VeryLateCompany.Patches;
 using Unity.Netcode;
 using UnityEngine;
+using VeryLateCompany;
+using VeryLateCompany.Patches;
 using static Unity.Netcode.FastBufferWriter;
+[HarmonyDebug]
 
 [HarmonyPatch(typeof(RoundManager), "__rpc_handler_3073943002")]
 [HarmonyWrapSafe]
@@ -17,21 +20,12 @@ internal static class __rpc_handler_3073943002_patch
 	private static bool Prefix(NetworkBehaviour target, FastBufferReader reader, __RpcParams rpcParams)
 	{
 		NetworkManager networkManager = target.NetworkManager;
-		if (networkManager != null && networkManager.IsListening && !networkManager.IsHost)
+		if (networkManager != null && networkManager.IsListening && !networkManager.IsHost&&RoundManager_Patch.isMidSessionJoiningRound)
 		{
 			try
             {
                 Debug.Log($"Reading level info...");
-				if (DateTime.Now.Ticks - lastTime > 10000000)
-				{
-					lastTime = DateTime.Now.Ticks;
-				}
-				else {
-					Debug.LogWarning("Too frequent level info request, ignoring.");
-					return false;
-				
-				}
-					int randomSeed = default(int);
+				int randomSeed = default(int);
 				ByteUnpacker.ReadValueBitPacked(reader, out randomSeed);
 				int levelID = default(int);
 				ByteUnpacker.ReadValueBitPacked(reader, out levelID);
@@ -63,14 +57,14 @@ internal static class __rpc_handler_3073943002_patch
 					
 				}
 				RoundManager.Instance.currentLevel.currentWeather = WeatherSync.CurrentWeather;
-				RPCExecStage.SetValue(target, RpcEnum.Client);
+				RPCExecStage.SetValue(target, RpcEnum.Execute);
 				(target as RoundManager).GenerateNewLevelClientRpc(randomSeed, levelID, moldIterations, moldStartPosition, syncDestroyedMold);
 				RPCExecStage.SetValue(target, RpcEnum.None);
 				return false;
 			}
 			catch(Exception e)
 			{ 
-				Debug.LogError(e+"\n"+e.StackTrace);
+				Plugin.LogException(e);
 				WeatherSync.DoOverride = false;
 				reader.Seek(0);
 				return true;

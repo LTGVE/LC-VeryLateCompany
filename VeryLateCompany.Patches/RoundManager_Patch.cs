@@ -11,17 +11,23 @@ using UnityEngine.SceneManagement;
 
 namespace McBowie.VeryLateCompany.VeryLateCompany.Patches
 {
-    [HarmonyPatch(typeof(RoundManager))]
+   // [HarmonyDebug]
+
+    //[HarmonyPatch(typeof(RoundManager))]
     internal class RoundManager_Patch
     {
+        public static bool isMidSessionJoiningRound = false;
+
+        /*
         public static FieldInfo __rpc_exec_stage = typeof(NetworkBehaviour).GetField("__rpc_exec_stage", BindingFlags.Instance | BindingFlags.NonPublic);
         public static Type __RpcExecStage = typeof(NetworkBehaviour).GetNestedType("__RpcExecStage", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static bool changedRpcExecStage = false;
 
+        //private static readonly MethodInfo __beginSendClientRpc = typeof(NetworkBehaviour).GetMethod("__beginSendClientRpc", BindingFlags.Instance | BindingFlags.NonPublic);
 
-        private static readonly MethodInfo __beginSendClientRpc = typeof(NetworkBehaviour).GetMethod("__beginSendClientRpc", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private static readonly MethodInfo __endSendClientRpc = typeof(NetworkBehaviour).GetMethod("__endSendClientRpc", BindingFlags.Instance | BindingFlags.NonPublic);
+       // private static readonly MethodInfo __endSendClientRpc = typeof(NetworkBehaviour).GetMethod("__endSendClientRpc", BindingFlags.Instance | BindingFlags.NonPublic);
         private static object lastRpcExecStage;
+        /*
         [HarmonyPatch("SetLockedDoors")]
 
         [HarmonyPrefix]
@@ -63,16 +69,19 @@ namespace McBowie.VeryLateCompany.VeryLateCompany.Patches
             Debug.Log("BreakerBoxRandom seed : " + (roundSeed + 20));
             return false;
         }
-
+        *//*
         [HarmonyPatch("GenerateNewLevelClientRpc")]
         [HarmonyPrefix]
         public static bool GenerateNewLevelClientRpc(RoundManager __instance,int randomSeed, int levelID, int moldIterations = 0, int moldStartPosition = 0, int[] syncDestroyedMold = null)
         {
-
-            object executeStage = Enum.Parse(__RpcExecStage, "Execute");
-            object sendStage = Enum.Parse(__RpcExecStage, "Send");
-            lastRpcExecStage = (object)__rpc_exec_stage.GetValue(__instance);
-            __rpc_exec_stage.SetValue(__instance, executeStage);
+            if (isMidSessionJoiningRound&&!__instance.IsServer) {
+                object executeStage = Enum.Parse(__RpcExecStage, "Execute");
+                object sendStage = Enum.Parse(__RpcExecStage, "Send");
+                lastRpcExecStage = (object)__rpc_exec_stage.GetValue(__instance);
+                __rpc_exec_stage.SetValue(__instance, executeStage);
+                changedRpcExecStage = true;
+                isMidSessionJoiningRound = false;
+            }
             /*
             NetworkManager networkManager = __instance.NetworkManager;
             if ((object)networkManager == null || !networkManager.IsListening)
@@ -171,16 +180,19 @@ namespace McBowie.VeryLateCompany.VeryLateCompany.Patches
             else
             {
                 Debug.LogError($"This client could not find dungeon generator! scene count: {SceneManager.sceneCount}");
-            }*/
+            }
             //return false;
-            GameObject.Find("Environment/SpaceProps/Planets").SetActive(false);
+            //GameObject.Find("Environment/SpaceProps/Planets").SetActive(false);
             return true;
         }
         [HarmonyPatch("GenerateNewLevelClientRpc")]
         [HarmonyPostfix]
         public static void GenerateNewLevelClientRpc_Postfix(RoundManager __instance, int randomSeed, int levelID, int moldIterations = 0, int moldStartPosition = 0, int[] syncDestroyedMold = null)
         {
-            __rpc_exec_stage.SetValue(__instance, lastRpcExecStage);
-        }
+            if (changedRpcExecStage&& !__instance.IsServer) {
+                __rpc_exec_stage.SetValue(__instance, lastRpcExecStage);
+            }
+        }*/
     }
 }
+

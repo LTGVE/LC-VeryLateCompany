@@ -1,33 +1,44 @@
 using GameNetcodeStuff;
 using HarmonyLib;
+using McBowie.VeryLateCompany.VeryLateCompany.Patches;
 using Unity.Netcode;
 using UnityEngine;
 
 namespace VeryLateCompany.Patches
 {
-	[HarmonyPatch(typeof(StartOfRound), "OnPlayerDC")]
+    [HarmonyDebug]
+
+    [HarmonyPatch(typeof(StartOfRound), "OnPlayerDC")]
 	internal class OnPlayerDC_patch
+
 	{
+
 		[HarmonyPrefix]
 		private static bool Prefix(StartOfRound __instance, int playerObjectNumber, ulong clientId)
 		{
-			Debug.Log((object)"Calling OnPlayerDC!");
+			if (clientId==OnPlayerConnectedClientRpc_patch.currentClientId&&!NetworkManager.Singleton.IsServer) {
+				Debug.Log($"OnPlayerDC: Local client is disconnecting currentClientId: {OnPlayerConnectedClientRpc_patch.currentClientId} and clientId: {clientId}");
+				OnPlayerConnectedClientRpc_patch.isClient = false;
+				RoundManager_Patch.isMidSessionJoiningRound = false;
+			
+			}
+			Debug.Log("Calling OnPlayerDC!");
 			if (!__instance.ClientPlayerList.ContainsKey(clientId))
 			{
-				Debug.Log((object)"disconnect: clientId key already removed!");
+				Debug.Log("disconnect: clientId key already removed!");
 				return false;
 			}
-			if ((Object)(object)GameNetworkManager.Instance.localPlayerController != (Object)null && clientId == GameNetworkManager.Instance.localPlayerController.actualClientId)
+			if (GameNetworkManager.Instance.localPlayerController != null && clientId == GameNetworkManager.Instance.localPlayerController.actualClientId)
 			{
-				Debug.Log((object)"OnPlayerDC: Local client is disconnecting so return.");
+				Debug.Log("OnPlayerDC: Local client is disconnecting so return.");
 				return false;
 			}
-			if (((NetworkBehaviour)__instance).NetworkManager.ShutdownInProgress || (Object)(object)NetworkManager.Singleton == (Object)null)
+			if (((NetworkBehaviour)__instance).NetworkManager.ShutdownInProgress || NetworkManager.Singleton == null)
 			{
-				Debug.Log((object)"Shutdown is in progress, returning");
+				Debug.Log("Shutdown is in progress, returning");
 				return false;
 			}
-			Debug.Log((object)"Player DC'ing 2");
+			Debug.Log("Player DC'ing 2");
 			if (((NetworkBehaviour)__instance).IsServer && __instance.ClientPlayerList.TryGetValue(clientId, out var value))
 			{
 				HUDManager.Instance.AddTextToChatOnServer($"[playerNum{__instance.allPlayerScripts[value].playerClientId}] disconnected.");
@@ -38,7 +49,7 @@ namespace VeryLateCompany.Patches
 			}
 			__instance.ClientPlayerList.Remove(clientId);
 			__instance.connectedPlayersAmount--;
-			Debug.Log((object)"Player DC'ing 3");
+			Debug.Log("Player DC'ing 3");
 			PlayerControllerB component = __instance.allPlayerObjects[playerObjectNumber].GetComponent<PlayerControllerB>();
 			component.sentPlayerValues = false;
 			component.isPlayerControlled = false;

@@ -6,13 +6,16 @@ using System.Reflection;
 using System.Reflection.Emit;
 using GameNetcodeStuff;
 using HarmonyLib;
+using McBowie.VeryLateCompany.VeryLateCompany.Patches;
 using Unity.Netcode;
 using UnityEngine;
 using static Unity.Netcode.FastBufferWriter;
 
 namespace VeryLateCompany.Patches
 {
-	[HarmonyPatch(typeof(StartOfRound), "OnPlayerConnectedClientRpc")]
+    [HarmonyDebug]
+
+    [HarmonyPatch(typeof(StartOfRound), "OnPlayerConnectedClientRpc")]
 	[HarmonyWrapSafe]
 	internal class OnPlayerConnectedClientRpc_patch
 	{
@@ -38,8 +41,10 @@ namespace VeryLateCompany.Patches
 		private static bool wasPresentAtGameStart = false;
 
 		public static StartOfRound StartOfRoundInstance = null;
+        public static bool isClient = false;
+        public static ulong currentClientId= 0;
 
-		internal static void UpdateControlledState()
+        internal static void UpdateControlledState()
 		{
 			for (int i = 0; i < StartOfRound.Instance.connectedPlayersAmount + 1; i++)
 			{
@@ -97,69 +102,84 @@ namespace VeryLateCompany.Patches
 		[HarmonyPrefix]
 		private static void Prefix(StartOfRound __instance, ulong clientId, int connectedPlayers, ulong[] connectedPlayerIdsOrdered, int assignedPlayerObjectId, int serverMoneyAmount, int levelID, int profitQuota, int timeUntilDeadline, int quotaFulfilled, int randomSeed)
 		{
-
-			PreviousLocation = __instance.allPlayerObjects[assignedPlayerObjectId].transform.position;
+            PreviousLocation = __instance.allPlayerObjects[assignedPlayerObjectId].transform.position;
+			throw new NullReferenceException("TEST");
 		}
 
-		[HarmonyPostfix]
+        [HarmonyPostfix]
 		private static void Postfix(StartOfRound __instance, ulong clientId, int connectedPlayers, ulong[] connectedPlayerIdsOrdered, int assignedPlayerObjectId, int serverMoneyAmount, int levelID, int profitQuota, int timeUntilDeadline, int quotaFulfilled, int randomSeed)
 		{
-			Debug.Log($"Player is connected with ID: {clientId} has connected players: {connectedPlayers} and assigned player object ID: {assignedPlayerObjectId}");
-			StartOfRoundInstance = __instance;
-			startOfRound = __instance;
-			playerObjectID = assignedPlayerObjectId;
-			if (__instance.connectedPlayersAmount + 1 >= __instance.allPlayerScripts.Length)
+			try
 			{
-				Plugin.SetLobbyJoinable(joinable: false);
-			}
-			playerControllerB = __instance.allPlayerScripts[assignedPlayerObjectId];
-			playerObject = __instance.allPlayerObjects[assignedPlayerObjectId];
-			playerControllerB.DisablePlayerModel(__instance.allPlayerObjects[assignedPlayerObjectId], enable: true, disableLocalArms: true);
-			__instance.livingPlayers = __instance.connectedPlayersAmount + 1;
-			for (int i = 0; i < __instance.allPlayerScripts.Length; i++)
-			{
-				PlayerControllerB playerControllerB2 = __instance.allPlayerScripts[i];
-				if (playerControllerB2.isPlayerControlled && playerControllerB2.isPlayerDead)
+				Debug.Log($"Player is connected with ID: {clientId} has connected players: {connectedPlayers} and assigned player object ID: {assignedPlayerObjectId}");
+
+				StartOfRoundInstance = __instance;
+				startOfRound = __instance;
+				playerObjectID = assignedPlayerObjectId;
+				if (__instance.connectedPlayersAmount + 1 >= __instance.allPlayerScripts.Length)
 				{
-					__instance.livingPlayers--;
+					Plugin.SetLobbyJoinable(joinable: false);
 				}
-			}
-			if (((NetworkBehaviour)__instance).IsServer && !__instance.inShipPhase)
-			{
-				RoundManager instance = RoundManager.Instance;
-				ClientRpcParams clientRpcParams = default(ClientRpcParams);
-				clientRpcParams.Send = new ClientRpcSendParams
+				playerControllerB = __instance.allPlayerScripts[assignedPlayerObjectId];
+				playerObject = __instance.allPlayerObjects[assignedPlayerObjectId];
+				playerControllerB.DisablePlayerModel(__instance.allPlayerObjects[assignedPlayerObjectId], enable: true, disableLocalArms: true);
+				__instance.livingPlayers = __instance.connectedPlayersAmount + 1;
+				for (int i = 0; i < __instance.allPlayerScripts.Length; i++)
 				{
-					TargetClientIds = new List<ulong> { clientId }
-				};
-				ClientRpcParams clientRpcParams2 = clientRpcParams;
-				uint num = 3073943002u;
-				FastBufferWriter fastBufferWriter = (FastBufferWriter)beginSendClientRpcMethod.Invoke(instance, new object[3] { num, clientRpcParams2, 0 });
-				BytePacker.WriteValueBitPacked(fastBufferWriter, __instance.randomMapSeed);
-				BytePacker.WriteValueBitPacked(fastBufferWriter, __instance.currentLevelID);
-				BytePacker.WriteValueBitPacked(fastBufferWriter, __instance.currentLevel.moldSpreadIterations);
-				BytePacker.WriteValueBitPacked(fastBufferWriter, __instance.currentLevel.moldStartPosition);
-				Debug.Log($"Sending Level Info to client: Seed : {__instance.randomMapSeed} Level ID: {__instance.currentLevelID} Mold Spread Iterations: {__instance.currentLevel.moldSpreadIterations} Mold Start Position: {__instance.currentLevel.moldStartPosition}");
+					PlayerControllerB playerControllerB2 = __instance.allPlayerScripts[i];
+					if (playerControllerB2.isPlayerControlled && playerControllerB2.isPlayerDead)
+					{
+						__instance.livingPlayers--;
+					}
+				}
+				Debug.Log($"inShipPhase: {__instance.inShipPhase}");
 
 
-				MoldSpreadManager moldSpreadManager = UnityEngine.Object.FindObjectOfType<MoldSpreadManager>();
-				bool value = moldSpreadManager !=null;
-				fastBufferWriter.WriteValueSafe(value);
-				if (value)
+				if (__instance.IsServer && !__instance.inShipPhase)
 				{
-					fastBufferWriter.WriteValueSafe<int>(moldSpreadManager.planetMoldStates[StartOfRound.Instance.currentLevelID].destroyedMold.ToArray(), default(ForPrimitives));
+					RoundManager instance = RoundManager.Instance;
+					ClientRpcParams clientRpcParams = default(ClientRpcParams);
+					clientRpcParams.Send = new ClientRpcSendParams
+					{
+						TargetClientIds = new List<ulong> { clientId }
+					};
+					ClientRpcParams clientRpcParams2 = clientRpcParams;
+					uint num = 3073943002u;
+					FastBufferWriter fastBufferWriter = (FastBufferWriter)beginSendClientRpcMethod.Invoke(instance, new object[3] { num, clientRpcParams2, 0 });
+					BytePacker.WriteValueBitPacked(fastBufferWriter, __instance.randomMapSeed);
+					BytePacker.WriteValueBitPacked(fastBufferWriter, __instance.currentLevelID);
+					BytePacker.WriteValueBitPacked(fastBufferWriter, __instance.currentLevel.moldSpreadIterations);
+					BytePacker.WriteValueBitPacked(fastBufferWriter, __instance.currentLevel.moldStartPosition);
+					Debug.Log($"Sending Level Info to client: Seed : {__instance.randomMapSeed} Level ID: {__instance.currentLevelID} Mold Spread Iterations: {__instance.currentLevel.moldSpreadIterations} Mold Start Position: {__instance.currentLevel.moldStartPosition}");
+
+
+					MoldSpreadManager moldSpreadManager = UnityEngine.Object.FindObjectOfType<MoldSpreadManager>();
+					bool value = moldSpreadManager != null;
+					fastBufferWriter.WriteValueSafe(value);
+					if (value)
+					{
+						fastBufferWriter.WriteValueSafe<int>(moldSpreadManager.planetMoldStates[StartOfRound.Instance.currentLevelID].destroyedMold.ToArray(), default(ForPrimitives));
+					}
+					BytePacker.WriteValueBitPacked(fastBufferWriter, (int)(instance.currentLevel.currentWeather + 255));
+					endSendClientRpcMethod.Invoke(instance, new object[4] { fastBufferWriter, num, clientRpcParams2, 0 });
+					uint num2 = 2729232387u;
+					FastBufferWriter fastBufferWriter2 = (FastBufferWriter)beginSendClientRpcMethod.Invoke(instance, new object[3] { num2, clientRpcParams2, 0 });
+					Debug.Log((object)("Sending weather to client: " + (int)(instance.currentLevel.currentWeather + 255)));
+					endSendClientRpcMethod.Invoke(instance, new object[4] { fastBufferWriter2, num2, clientRpcParams2, 0 });
 				}
-				BytePacker.WriteValueBitPacked(fastBufferWriter, (int)(instance.currentLevel.currentWeather + 255));
-				endSendClientRpcMethod.Invoke(instance, new object[4] { fastBufferWriter, num, clientRpcParams2, 0 });
-				uint num2 = 2729232387u;
-				FastBufferWriter fastBufferWriter2 = (FastBufferWriter)beginSendClientRpcMethod.Invoke(instance, new object[3] { num2, clientRpcParams2, 0 });
-				Debug.Log((object)("Sending weather to client: " + (int)(instance.currentLevel.currentWeather + 255)));
-				endSendClientRpcMethod.Invoke(instance, new object[4] { fastBufferWriter2, num2, clientRpcParams2, 0 });
-			}
-			if (NetworkManager.Singleton.LocalClientId != clientId && !__instance.inShipPhase)
-			{
-				__instance.livingPlayers++;
-				__instance.allPlayerScripts[0].playersManager.livingPlayers++;
+				if (NetworkManager.Singleton.LocalClientId != clientId && !__instance.inShipPhase)
+				{
+					__instance.livingPlayers++;
+					__instance.allPlayerScripts[0].playersManager.livingPlayers++;
+				}
+				
+                if (__instance.IsClient && NetworkManager.Singleton.LocalClientId == clientId)
+                {
+                    RoundManager_Patch.isMidSessionJoiningRound = !StartOfRoundInstance.inShipPhase;
+                }
+            }
+			catch (Exception e) { 
+			Plugin.LogException(e);
 			}
 		}
 
@@ -183,13 +203,14 @@ namespace VeryLateCompany.Patches
 		[HarmonyPostfix]
 		private static void OnClientConnectPatch(ulong clientId)
 		{
+			Debug.Log((object)($"Client {clientId} has connected"));
 			isPlayerDead = playerControllerB?.isPlayerDead ?? false;
 		}
 
 		[HarmonyPatch(typeof(RoundManager))]
 		[HarmonyPatch("GenerateNewFloor")]
 		[HarmonyPostfix]
-		private static void GenerateNewFloorPostfix()
+		private static void GenerateNewFloorPostfix(RoundManager __instance)
 		{
 			wasPresentAtGameStart = UnityEngine.Object.FindObjectOfType<StartMatchLever>().leverHasBeenPulled;
 			/*
