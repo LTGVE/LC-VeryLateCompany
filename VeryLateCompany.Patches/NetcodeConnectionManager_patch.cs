@@ -1,14 +1,11 @@
 ﻿using HarmonyLib;
 using System;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using Unity.Netcode;
-using UnityEngine;
 
-namespace VeryLateCompany.VeryLateCompany.Patches
+namespace VeryLateCompany.Patches
 {
-   // [HarmonyDebug]
+    // [HarmonyDebug]
     //[HarmonyPatch(typeof(NetworkConnectionManager))]
     public class NetcodeConnectionManager_patch
     {
@@ -23,7 +20,8 @@ namespace VeryLateCompany.VeryLateCompany.Patches
         public static FieldInfo f_MessageManager = typeof(NetworkManager).GetField("MessageManager", BindingFlags.NonPublic | BindingFlags.Instance);
         [HarmonyPatch("AddClient")]
         [HarmonyPrefix]
-        public static bool AddClient(NetworkConnectionManager __instance, ulong clientId,ref NetworkClient __result) {
+        public static bool AddClient(NetworkConnectionManager __instance, ulong clientId, ref NetworkClient __result)
+        {
             /*
             Debug.LogError($"Trying to add a client.This is a debug log.Don't worry about it.");
             try

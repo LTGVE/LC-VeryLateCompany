@@ -1,12 +1,8 @@
-using Unity.Netcode;
-
-internal class RpcEnum : NetworkBehaviour
+public class RpcEnum
 {
-	public static int None => 0;
-
-	public static int Client => 2;
-
-	public static int Server => 1;
-	public static int Execute => 1;
-
+    public const int Send = 0;
+    public const int Execute = 1;
+    public const int None = 0;
+    public const int Server = 1;
+    public const int Client = 2;
 }

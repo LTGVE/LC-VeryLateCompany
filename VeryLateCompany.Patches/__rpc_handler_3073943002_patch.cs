@@ -1,0 +1,75 @@
+using HarmonyLib;
+using System;
+using System.Reflection;
+using Unity.Netcode;
+using UnityEngine;
+using VeryLateCompany;
+using static Unity.Netcode.FastBufferWriter;
+[HarmonyDebug]
+[HarmonyPatch(typeof(RoundManager), "__rpc_handler_3073943002")]
+[HarmonyWrapSafe]
+internal static class __rpc_handler_3073943002_patch
+{
+    public static FieldInfo RPCExecStage = typeof(NetworkBehaviour).GetField("__rpc_exec_stage", BindingFlags.Instance | BindingFlags.NonPublic);
+    public static long lastTime = 0;
+
+    [HarmonyPrefix]
+    private static bool Prefix(NetworkBehaviour target, FastBufferReader reader, __RpcParams rpcParams)
+    {
+        NetworkManager networkManager = target.NetworkManager;
+        if (networkManager != null && networkManager.IsListening && !networkManager.IsHost)
+        {
+            try
+            {
+                StartOfRound.Instance.inShipPhase = false;
+                Debug.Log($"Reading level info...");
+                int randomSeed = default(int);
+                ByteUnpacker.ReadValueBitPacked(reader, out randomSeed);
+                int levelID = default(int);
+                ByteUnpacker.ReadValueBitPacked(reader, out levelID);
+                int moldIterations = default(int);
+                ByteUnpacker.ReadValueBitPacked(reader, out moldIterations);
+                int moldStartPosition = default(int);
+                ByteUnpacker.ReadValueBitPacked(reader, out moldStartPosition);
+                bool value5 = default(bool);
+                reader.ReadValueSafe<bool>(out value5);
+                Debug.Log($"Read end! Level info: Seed: {randomSeed},ID: {levelID}, MoldIterations: {moldIterations}, ModStartPosition: {moldStartPosition}, Value5(Unknown value): {value5}");
+
+                int[] syncDestroyedMold = null;
+                if (value5)
+                {
+                    reader.ReadValueSafe<int>(out syncDestroyedMold, default(ForPrimitives));
+                }
+                if (reader.Position < reader.Length)
+                {
+                    int currentWeather = default(int);
+                    ByteUnpacker.ReadValueBitPacked(reader, out currentWeather);
+                    Debug.Log($"Current weather: {currentWeather}");
+                    currentWeather -= 255;
+                    if (currentWeather < 0)
+                    {
+                        currentWeather = -1;
+                    }
+                    WeatherSync.CurrentWeather = (LevelWeatherType)currentWeather;
+                    WeatherSync.DoOverride = true;
+
+                }
+
+                RoundManager.Instance.currentLevel.currentWeather = WeatherSync.CurrentWeather;
+                RPCExecStage.SetValue(target, RpcEnum.Execute);
+                (target as RoundManager).GenerateNewLevelClientRpc(randomSeed, levelID, moldIterations, moldStartPosition, syncDestroyedMold);
+                RPCExecStage.SetValue(target, RpcEnum.None);
+
+                return false;
+            }
+            catch (Exception e)
+            {
+                Plugin.LogException(e);
+                WeatherSync.DoOverride = false;
+                reader.Seek(0);
+                return true;
+            }
+        }
+        return true;
+    }
+}

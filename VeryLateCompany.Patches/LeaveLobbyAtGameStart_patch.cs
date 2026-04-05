@@ -4,9 +4,9 @@ using HarmonyLib;
 [HarmonyWrapSafe]
 internal static class LeaveLobbyAtGameStart_patch
 {
-	[HarmonyPrefix]
-	private static bool Prefix()
-	{
-		return false;
-	}
+    [HarmonyPrefix]
+    private static bool Prefix()
+    {
+        return false;
+    }
 }

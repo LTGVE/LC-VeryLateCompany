@@ -1,14 +1,12 @@
 ﻿using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 
-namespace VeryLateCompany.VeryLateCompany.Patches
-{/*
+namespace VeryLateCompany.Patches
+{
     [HarmonyPatch(typeof(StartOfRound))]
-     public class StartOfRound_patch
+    public class StartOfRound_patch
     {
+        /*
         [HarmonyPatch("EndGameServerRpc")]
         [HarmonyPrefix]
         public static void EndGameServerRpc(StartOfRound __instance) {
@@ -20,6 +18,14 @@ namespace VeryLateCompany.VeryLateCompany.Patches
         public static void EndGameClientRpc(StartOfRound __instance)
         {
             GameObject.Find("Environment/SpaceProps/Planets").SetActive(true);
+        }*/
+        [HarmonyPatch("ShipLeave")]
+        [HarmonyPrefix]
+        public static bool ShipLeave()
+        {
+            GameObject.Find("Environment/SpaceProps/Planets").SetActive(true);
+            return true;
         }
-    }*/
+
+    }
 }
