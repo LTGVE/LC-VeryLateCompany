@@ -6,7 +6,7 @@ namespace VeryLateCompany
 {
     [HarmonyDebug]
 
-    [BepInPlugin("McBowie.VeryLateCompany", "VeryLateCompany", "0.1.0")]
+    [BepInPlugin("VeryLateCompany", "VeryLateCompany", "0.1.7")]
     internal class Plugin : BaseUnityPlugin
     {
         public static bool AllowJoiningWhileLanded = true;
@@ -27,12 +27,12 @@ namespace VeryLateCompany
             //IL_001f: Expected O, but got Unknown
             Logger = BepInEx.Logging.Logger.CreateLogSource(MetadataHelper.GetMetadata(this).Name);
             Instance = this;
-            Harmony harmony = new Harmony("McBowie.VeryLateCompany");
+            Harmony harmony = new Harmony("VeryLateCompany");
             harmony.PatchAll(typeof(Plugin).Assembly);
-            Logger.LogInfo(" VeryLateCompany v0.1.6-BETA v81 Fixed has loaded! Restorer : LT_GVE");
+            Logger.LogInfo(" VeryLateCompany v0.1.7-BETA v81 Fixed has loaded! Restorer : LT_GVE");
             Logger.LogWarning(
                 "\n！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！" +
-                "\nVeryLateCompany v0.1.6-BETA v81 Fixed by LT_GVE" +
+                "\nVeryLateCompany v0.1.7-BETA v81 Fixed by LT_GVE" +
                 "\nThis mod is Decompiled from  McBowie/VeryLateCompany Mod then fixed and re-built it." +
                 "\n" +
                 "\nJust for fun" +

@@ -171,21 +171,7 @@ namespace VeryLateCompany.Patches
                     Debug.Log((object)("Sending weather to client: " + (int)(instance.currentLevel.currentWeather + 255)));
 
                     endSendClientRpcMethod.Invoke(instance, new object[4] { fastBufferWriter2, num2, clientRpcParams2, 0 });
-                    if (breakerBox.isPowerOn)
-                    {
-                        ClientRpcParams clientRpcParams3 = default;
-                        var num3 = 1061166170U;
-                        FastBufferWriter fastBufferWriter3 = (FastBufferWriter)RoundManager_Patch.__beginSendClientRpc.Invoke(RoundManager.Instance, new object[] { num3, clientRpcParams3, RpcDelivery.Reliable });
-                        RoundManager_Patch.__endSendClientRpc.Invoke(RoundManager.Instance, new object[] { fastBufferWriter3, num3, clientRpcParams3, RpcDelivery.Reliable });
-                    }
-                    else
-                    {
-                        ClientRpcParams clientRpcParams3 = default;
-                        var num3 = 1586488299U;
-                        FastBufferWriter fastBufferWriter3 = (FastBufferWriter)RoundManager_Patch.__beginSendClientRpc.Invoke(RoundManager.Instance, new object[] { num3, clientRpcParams3, RpcDelivery.Reliable });
-                        RoundManager_Patch.__endSendClientRpc.Invoke(RoundManager.Instance, new object[] { fastBufferWriter3, num3, clientRpcParams3, RpcDelivery.Reliable });
-
-                    }
+                    RoundManager.Instance.SwitchPower(breakerBox.isPowerOn);
 
 
                 }
@@ -198,6 +184,20 @@ namespace VeryLateCompany.Patches
                 if (__instance.IsClient && NetworkManager.Singleton.LocalClientId == clientId)
                 {
                     RoundManager_Patch.isMidSessionJoiningRound = !StartOfRoundInstance.inShipPhase;
+                    PlayerControllerB localClient = default;
+                    for (int j = 0; j < __instance.allPlayerScripts.Length; j++) { 
+                        var controller = __instance.allPlayerScripts[j];
+                        var controllerClientId = controller.playerClientId;
+                        Debug.Log($"Player {j} has client ID: {controllerClientId}");
+                        if (controllerClientId == clientId) { 
+                            localClient = controller;
+                            Debug.Log($"Local client found: {localClient.playerUsername}");
+                        }
+                    }
+                    if (localClient != null || localClient != default) { 
+                        __instance.localPlayerController= localClient;
+                        GameNetworkManager.Instance.localPlayerController = localClient;
+                    }
                 }
             }
             catch (Exception e)

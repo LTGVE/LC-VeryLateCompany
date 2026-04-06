@@ -65,17 +65,30 @@ namespace VeryLateCompany.Patches
             return false;
         }
         */
+        
         [HarmonyPatch("GenerateNewLevelClientRpc")]
         [HarmonyPrefix]
         public static bool GenerateNewLevelClientRpc(RoundManager __instance, int randomSeed, int levelID, int moldIterations = 0, int moldStartPosition = 0, int[] syncDestroyedMold = null)
-        {/*
+        {
+            try
+            {
+                Debug.Log($"localPlayerController is Null ? {StartOfRound.Instance.localPlayerController == null}");
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                Debug.LogError("localPlayerController is Null!!!");
+            }
+            return true;//has been Fixed
+            /*
             if (isMidSessionJoiningRound&&!__instance.IsServer) {
                 lastRpcExecStage = (object)__rpc_exec_stage.GetValue(__instance);
                 __rpc_exec_stage.SetValue(__instance, RpcEnum.Execute);
                 changedRpcExecStage = true;
-            }*/
-
-
+            }
+            */
+            #region lastChanged
+            /*
             Debug.Log($"Generating new level. RPC Execute Stage: {__rpc_exec_stage.GetValue(__instance).ToString()} {(int)__rpc_exec_stage.GetValue(__instance)}");
 
             NetworkManager networkManager = __instance.NetworkManager;
@@ -117,8 +130,8 @@ namespace VeryLateCompany.Patches
             {
                 Debug.LogWarning($"Cannot generate new level. Not on client or server.rpc exec stage : {(int)__rpc_exec_stage.GetValue(__instance) != (int)RpcEnum.Execute}+{__rpc_exec_stage.GetValue(__instance).ToString()}\nis client : {networkManager.IsClient}\nis host : {networkManager.IsHost}");
                 return false;
-            }
-
+            }*/
+            #endregion
 
             /*
             NetworkManager networkManager = __instance.NetworkManager;
@@ -146,18 +159,9 @@ namespace VeryLateCompany.Patches
                 }
 
                 __endSendClientRpc.Invoke(__instance,new object[] { bufferWriter, 3073943002u, clientRpcParams, RpcDelivery.Reliable });
-            }
-
-
-
-            #region Main problem code
-            if (!__rpc_exec_stage.GetValue(__instance).Equals(RpcEnum.Execute) || (!networkManager.IsClient && !networkManager.IsHost))
-            {
-                Debug.LogWarning($"Cannot generate new level. Not on client or server.rpc exec stage : {__rpc_exec_stage.GetValue(__instance).ToString()}\nis client : {networkManager.IsClient}\nis host : {networkManager.IsHost}");
-                return false;
-            }
-            #endregion
-            */
+            }*/
+            #region lastChanged
+            /*
             Debug.Log("Generating Others.");
             __rpc_exec_stage.SetValue(__instance, (int)RpcEnum.Send);
             __instance.GetOutsideAINodes(getUnderwaterNodes: false);
@@ -182,6 +186,13 @@ namespace VeryLateCompany.Patches
             Debug.Log($"SetPlayerManagerRandomSeed: {randomSeed} playerManager is Null ? {__instance.playersManager == null}");
             __instance.playersManager.randomMapSeed = randomSeed;
             __instance.currentLevel = __instance.playersManager.levels[levelID];
+            try
+            {
+                Debug.Log($"localPlayerController is Null ? {StartOfRound.Instance.localPlayerController == null}");
+            }
+            catch (Exception e) { 
+                Debug.LogException(e);
+            }
             Debug.Log($"RANDOM MAP SEED - {__instance.playersManager.randomMapSeed}\nMoon: {__instance.currentLevel.PlanetName}");
             Debug.Log("Initializing random number generators.");
             __instance.InitializeRandomNumberGenerators();
@@ -230,7 +241,8 @@ namespace VeryLateCompany.Patches
             {
                 Debug.LogError($"This client could not find dungeon generator! scene count: {SceneManager.sceneCount}");
             }
-            Debug.Log("Generating complete.");
+            Debug.Log("Generating complete.");*/
+            #endregion
             /*
             __instance.outsideAINodes = (from x in GameObject.FindGameObjectsWithTag("OutsideAINode")
                               orderby Vector3.Distance(x.transform.position, StartOfRound.Instance.elevatorTransform.position)
@@ -290,8 +302,12 @@ namespace VeryLateCompany.Patches
             }
             */
             //return false;
-            GameObject.Find("Environment/SpaceProps/Planets").SetActive(false);
             return false;
+        }
+        [HarmonyPatch("GenerateNewLevelClientRpc")]
+        [HarmonyPostfix]
+        public static void GenerateNewLevelClientRpc_Postfix(RoundManager __instance, int randomSeed, int levelID, int moldIterations = 0, int moldStartPosition = 0, int[] syncDestroyedMold = null) {
+            GameObject.Find("Environment/SpaceProps/Planets").SetActive(false);
         }
 
     }
