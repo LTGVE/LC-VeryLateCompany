@@ -4,25 +4,27 @@ using System.Reflection;
 using Unity.Netcode;
 using UnityEngine;
 using VeryLateCompany;
+using VeryLateCompany.Patches;
 using static Unity.Netcode.FastBufferWriter;
 [HarmonyDebug]
-[HarmonyPatch(typeof(RoundManager), "__rpc_handler_3073943002")]
+[HarmonyPatch(typeof(RoundManager))]
 [HarmonyWrapSafe]
 internal static class __rpc_handler_3073943002_patch
 {
     public static FieldInfo RPCExecStage = typeof(NetworkBehaviour).GetField("__rpc_exec_stage", BindingFlags.Instance | BindingFlags.NonPublic);
-    public static long lastTime = 0;
-
+    //    public static long lastTime = 0;
+    // public static inShipPhase => 
+    [HarmonyPatch("__rpc_handler_3073943002")]
     [HarmonyPrefix]
     private static bool Prefix(NetworkBehaviour target, FastBufferReader reader, __RpcParams rpcParams)
     {
+        Debug.Log($"__rpc_handler_3073943002_patch Prefix called!");
         NetworkManager networkManager = target.NetworkManager;
         if (networkManager != null && networkManager.IsListening && !networkManager.IsHost)
         {
             try
             {
                 StartOfRound.Instance.inShipPhase = false;
-                Debug.Log($"Reading level info...");
                 int randomSeed = default(int);
                 ByteUnpacker.ReadValueBitPacked(reader, out randomSeed);
                 int levelID = default(int);
@@ -44,7 +46,7 @@ internal static class __rpc_handler_3073943002_patch
                 {
                     int currentWeather = default(int);
                     ByteUnpacker.ReadValueBitPacked(reader, out currentWeather);
-                    Debug.Log($"Current weather: {currentWeather}");
+                    Debug.Log($"Current weather: {(LevelWeatherType)currentWeather}");
                     currentWeather -= 255;
                     if (currentWeather < 0)
                     {
@@ -55,11 +57,10 @@ internal static class __rpc_handler_3073943002_patch
 
                 }
 
-                RoundManager.Instance.currentLevel.currentWeather = WeatherSync.CurrentWeather;
                 RPCExecStage.SetValue(target, RpcEnum.Execute);
                 (target as RoundManager).GenerateNewLevelClientRpc(randomSeed, levelID, moldIterations, moldStartPosition, syncDestroyedMold);
                 RPCExecStage.SetValue(target, RpcEnum.None);
-
+                RoundManager.Instance.currentLevel.currentWeather = WeatherSync.CurrentWeather;
                 return false;
             }
             catch (Exception e)

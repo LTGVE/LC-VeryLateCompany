@@ -101,6 +101,7 @@ namespace VeryLateCompany.Patches
         [HarmonyPrefix]
         private static void Prefix(StartOfRound __instance, ulong clientId, int connectedPlayers, ulong[] connectedPlayerIdsOrdered, int assignedPlayerObjectId, int serverMoneyAmount, int levelID, int profitQuota, int timeUntilDeadline, int quotaFulfilled, int randomSeed)
         {
+            NetworkManager.Singleton.LogLevel = LogLevel.Developer;
             PreviousLocation = __instance.allPlayerObjects[assignedPlayerObjectId].transform.position;
             Debug.Log($"Player joined. last location: {PreviousLocation}");
         }
@@ -131,7 +132,7 @@ namespace VeryLateCompany.Patches
                         __instance.livingPlayers--;
                     }
                 }
-                Debug.Log($"inShipPhase: {__instance.inShipPhase}");
+                Debug.Log($"inShipPhase: {__instance.inShipPhase} landed:{__instance.shipHasLanded}");
 
 
                 if (__instance.IsServer && !__instance.inShipPhase)
@@ -146,8 +147,7 @@ namespace VeryLateCompany.Patches
 
                     ClientRpcParams clientRpcParams2 = clientRpcParams;
                     uint num = 3073943002u;
-                    FastBufferWriter fastBufferWriter = (FastBufferWriter)beginSendClientRpcMethod.Invoke(instance, new object[3] { num, clientRpcParams2, 0 });
-                    //BytePacker.WriteValueBitPacked(fastBufferWriter, __instance.inShipPhase ? 1 :0);
+                    FastBufferWriter fastBufferWriter = (FastBufferWriter)beginSendClientRpcMethod.Invoke(instance, new object[3] { num, clientRpcParams2, RpcDelivery.Reliable });
                     BytePacker.WriteValueBitPacked(fastBufferWriter, __instance.randomMapSeed);
                     BytePacker.WriteValueBitPacked(fastBufferWriter, __instance.currentLevelID);
                     BytePacker.WriteValueBitPacked(fastBufferWriter, __instance.currentLevel.moldSpreadIterations);
@@ -162,15 +162,15 @@ namespace VeryLateCompany.Patches
                         fastBufferWriter.WriteValueSafe<int>(moldSpreadManager.planetMoldStates[StartOfRound.Instance.currentLevelID].destroyedMold.ToArray(), default(ForPrimitives));
                     }
                     BytePacker.WriteValueBitPacked(fastBufferWriter, (int)(instance.currentLevel.currentWeather + 255));
-                    endSendClientRpcMethod.Invoke(instance, new object[4] { fastBufferWriter, num, clientRpcParams2, 0 });
+                    endSendClientRpcMethod.Invoke(instance, new object[4] { fastBufferWriter, num, clientRpcParams2, RpcDelivery.Reliable });
                     uint num2 = 2729232387u;
-                    FastBufferWriter fastBufferWriter2 = (FastBufferWriter)beginSendClientRpcMethod.Invoke(instance, new object[3] { num2, clientRpcParams2, 0 });
+                    FastBufferWriter fastBufferWriter2 = (FastBufferWriter)beginSendClientRpcMethod.Invoke(instance, new object[3] { num2, clientRpcParams2, RpcDelivery.Reliable });
 
 
 
                     Debug.Log((object)("Sending weather to client: " + (int)(instance.currentLevel.currentWeather + 255)));
 
-                    endSendClientRpcMethod.Invoke(instance, new object[4] { fastBufferWriter2, num2, clientRpcParams2, 0 });
+                    endSendClientRpcMethod.Invoke(instance, new object[4] { fastBufferWriter2, num2, clientRpcParams2, RpcDelivery.Reliable });
                     RoundManager.Instance.SwitchPower(breakerBox.isPowerOn);
 
 
@@ -183,13 +183,12 @@ namespace VeryLateCompany.Patches
 
                 if (__instance.IsClient && NetworkManager.Singleton.LocalClientId == clientId)
                 {
-                    RoundManager_Patch.isMidSessionJoiningRound = !StartOfRoundInstance.inShipPhase;
                     PlayerControllerB localClient = default;
                     for (int j = 0; j < __instance.allPlayerScripts.Length; j++) { 
                         var controller = __instance.allPlayerScripts[j];
                         var controllerClientId = controller.playerClientId;
                         Debug.Log($"Player {j} has client ID: {controllerClientId}");
-                        if (controllerClientId == clientId) { 
+                        if (controllerClientId == (ulong)(connectedPlayers+1)) { 
                             localClient = controller;
                             Debug.Log($"Local client found: {localClient.playerUsername}");
                         }
@@ -197,6 +196,7 @@ namespace VeryLateCompany.Patches
                     if (localClient != null || localClient != default) { 
                         __instance.localPlayerController= localClient;
                         GameNetworkManager.Instance.localPlayerController = localClient;
+                        StartOfRound.Instance.localPlayerController= localClient;
                     }
                 }
             }

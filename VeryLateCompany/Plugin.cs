@@ -1,6 +1,8 @@
 using BepInEx;
 using HarmonyLib;
 using System;
+using System.Diagnostics;
+using Unity.Netcode;
 
 namespace VeryLateCompany
 {
@@ -29,10 +31,10 @@ namespace VeryLateCompany
             Instance = this;
             Harmony harmony = new Harmony("VeryLateCompany");
             harmony.PatchAll(typeof(Plugin).Assembly);
-            Logger.LogInfo(" VeryLateCompany v0.1.7-BETA v81 Fixed has loaded! Restorer : LT_GVE");
+            Logger.LogInfo(" VeryLateCompany v0.1.8-BETA v81 Fixed has loaded! Restorer : LT_GVE");
             Logger.LogWarning(
                 "\n！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！" +
-                "\nVeryLateCompany v0.1.7-BETA v81 Fixed by LT_GVE" +
+                "\nVeryLateCompany v0.1.8-BETA v81 Fixed by LT_GVE" +
                 "\nThis mod is Decompiled from  McBowie/VeryLateCompany Mod then fixed and re-built it." +
                 "\n" +
                 "\nJust for fun" +
@@ -56,19 +58,16 @@ namespace VeryLateCompany
         }
 
         public static void LogException(Exception e)
-        {
-            Logger.LogError(e);
-            /*
+        {            
             var st = new StackTrace(e, true);
-			UnityEngine.Debug.Log("Exception: " + e.Message + "\n" + e.StackTrace);
             foreach (var frame in st.GetFrames())
             {
                 string fileName = frame.GetFileName();
                 int line = frame.GetFileLineNumber();
                 int column = frame.GetFileColumnNumber();
                 string methodName = frame.GetMethod().Name;
-				UnityEngine.Debug.LogError($"Exception: {e.Message} at {fileName}. {methodName} {line}:{column}");
-            }*/
+				UnityEngine.Debug.LogError($"Exception: {e.Message} at {fileName}. {methodName} {line}:{column}. StackTrace: {e.StackTrace}");
+            }
 
         }
 

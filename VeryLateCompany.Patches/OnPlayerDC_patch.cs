@@ -13,7 +13,7 @@ namespace VeryLateCompany.Patches
 
     {
 
-        //[HarmonyPrefix]
+        [HarmonyPrefix]
         private static bool Prefix(StartOfRound __instance, int playerObjectNumber, ulong clientId)
         {/*
             if (clientId == OnPlayerConnectedClientRpc_patch.currentClientId && !NetworkManager.Singleton.IsServer)
@@ -68,6 +68,7 @@ namespace VeryLateCompany.Patches
             component.DisablePlayerModel(OnPlayerConnectedClientRpc_patch.StartOfRoundInstance.allPlayerObjects[playerObjectNumber]);
             */
 
+            
             Debug.Log($"Calling OnPlayerDC! playerObjectNumber: {playerObjectNumber}; clientId: {clientId}");
             if (!__instance.ClientPlayerList.ContainsKey(clientId))
             {
@@ -149,12 +150,16 @@ namespace VeryLateCompany.Patches
             catch (Exception arg)
             {
                 Debug.LogError($"Error while handling player disconnect!: {arg}");
+                Plugin.LogException(arg);
             }
             return false;
         }
+            //return true;
+        //}
 
         [HarmonyPostfix]
         public static void Postfix(StartOfRound __instance, int playerObjectNumber, ulong clientId) {
+            Debug.Log("Calling OnPlayerDC Postfix!");
             Plugin.SetLobbyJoinable(joinable: true);
         }
     }

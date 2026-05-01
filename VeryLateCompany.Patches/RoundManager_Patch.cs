@@ -1,4 +1,5 @@
 ﻿using DunGen;
+using GameNetcodeStuff;
 using HarmonyLib;
 using System;
 using System.Reflection;
@@ -13,8 +14,6 @@ namespace VeryLateCompany.Patches
     [HarmonyPatch(typeof(RoundManager))]
     internal class RoundManager_Patch
     {
-        public static bool isMidSessionJoiningRound = false;
-
 
         public static FieldInfo __rpc_exec_stage = typeof(NetworkBehaviour).GetField("__rpc_exec_stage", BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -73,6 +72,29 @@ namespace VeryLateCompany.Patches
             try
             {
                 Debug.Log($"localPlayerController is Null ? {StartOfRound.Instance.localPlayerController == null}");
+                if (__instance.IsClient&&( StartOfRound.Instance.localPlayerController == null|| GameNetworkManager.Instance.localPlayerController==null))
+                {
+ //                   RoundManager_Patch.isMidSessionJoiningRound = !StartOfRound.Instance.inShipPhase;
+                    PlayerControllerB localClient = default;
+                    for (int j = 0; j < StartOfRound.Instance.allPlayerScripts.Length; j++)
+                    {
+                        var controller = StartOfRound.Instance.allPlayerScripts[j];
+                        var controllerClientId = controller.playerClientId;
+                        Debug.Log($"Player {j} has client ID: {controllerClientId} LocalClientID {__instance.NetworkManager.LocalClientId}");
+                        if (controllerClientId == __instance.NetworkManager.LocalClientId)
+                        {
+                            localClient = controller;
+                            Debug.Log($"Local client found: {localClient.playerUsername}");
+                        }
+                    }
+                    if (localClient != null || localClient != default)
+                    {
+                        StartOfRound.Instance.localPlayerController = localClient;
+                        GameNetworkManager.Instance.localPlayerController = localClient;
+                    }
+                }
+                Debug.Log($"Fixed localPlayerController is Null ? {StartOfRound.Instance.localPlayerController == null} {GameNetworkManager.Instance.localPlayerController == null}");
+
             }
             catch (Exception e)
             {
