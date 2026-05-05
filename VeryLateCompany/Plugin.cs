@@ -34,7 +34,7 @@ namespace VeryLateCompany
             Logger.LogInfo(" VeryLateCompany v0.1.8-BETA v81 Fixed has loaded! Restorer : LT_GVE");
             Logger.LogWarning(
                 "\n！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！" +
-                "\nVeryLateCompany v0.1.8-BETA v81 Fixed by LT_GVE" +
+                "\nVeryLateCompany v0.1.9-BETA v81 Fixed by LT_GVE" +
                 "\nThis mod is Decompiled from  McBowie/VeryLateCompany Mod then fixed and re-built it." +
                 "\n" +
                 "\nJust for fun" +

@@ -53,6 +53,7 @@ internal static class __rpc_handler_3073943002_patch
                         currentWeather = -1;
                     }
                     WeatherSync.CurrentWeather = (LevelWeatherType)currentWeather;
+                    RoundManager.Instance.currentLevel.currentWeather = WeatherSync.CurrentWeather;
                     WeatherSync.DoOverride = true;
 
                 }
@@ -60,7 +61,6 @@ internal static class __rpc_handler_3073943002_patch
                 RPCExecStage.SetValue(target, RpcEnum.Execute);
                 (target as RoundManager).GenerateNewLevelClientRpc(randomSeed, levelID, moldIterations, moldStartPosition, syncDestroyedMold);
                 RPCExecStage.SetValue(target, RpcEnum.None);
-                RoundManager.Instance.currentLevel.currentWeather = WeatherSync.CurrentWeather;
                 return false;
             }
             catch (Exception e)
